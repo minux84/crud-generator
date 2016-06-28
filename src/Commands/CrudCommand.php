@@ -24,7 +24,8 @@ class CrudCommand extends Command
                             {--namespace= : Namespace of the controller.}
                             {--route-group= : Prefix of the route group.}
                             {--localize=no : Localize the generated files? yes|no. }
-                            {--locales=en : Locales to create lang files for.}';
+                            {--locales=en : Locales to create lang files for.}
+                            {--modal=false : Index with a modal for create}';
 
     /**
      * The console command description.
@@ -94,11 +95,12 @@ class CrudCommand extends Command
 
         $localize = $this->option('localize');
         $locales = $this->option('locales');
-
+		$modal = $this->option('modal');
+		
         $this->call('crud:controller', ['name' => $controllerNamespace . $name . 'Controller', '--crud-name' => $name, '--model-name' => $modelName, '--view-path' => $viewPath, '--required-fields' => $requiredFields, '--route-group' => $routeGroup]);
         $this->call('crud:model', ['name' => $modelName, '--fillable' => $fillable, '--table' => $tableName, '--pk' => $primaryKey]);
         //$this->call('crud:migration', ['name' => $migrationName, '--schema' => $fields, '--pk' => $primaryKey]);
-        $this->call('crud:view', ['name' => $name, '--fields' => $fields, '--table' => $table, '--hidden-fields' => $hiddenFields, '--auto-hide-fields' => $autoHide, '--view-path' => $viewPath, '--route-group' => $routeGroup, '--localize' => $localize, '--pk' => $primaryKey]);
+        $this->call('crud:view', ['name' => $name, '--fields' => $fields, '--modal' => $modal, '--table' => $table, '--hidden-fields' => $hiddenFields, '--auto-hide-fields' => $autoHide, '--view-path' => $viewPath, '--route-group' => $routeGroup, '--localize' => $localize, '--pk' => $primaryKey]);
         
         if ($localize == 'yes') {
             $this->call('crud:lang', ['name' => $name, '--fields' => $fields, '--locales' => $locales]);

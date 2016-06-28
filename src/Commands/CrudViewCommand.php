@@ -22,7 +22,8 @@ class CrudViewCommand extends Command
                             {--view-path= : The name of the view path.}
                             {--route-group= : Prefix of the route group.}
                             {--pk=id : The name of the primary key.}
-                            {--localize=no : Localize the view? yes|no.}';
+                            {--localize=no : Localize the view? yes|no.}
+                            {--modal=false : Index with a modal for create}';
 
     /**
      * The console command description.
@@ -304,24 +305,37 @@ class CrudViewCommand extends Command
 
             $i++;
         }
-
+		
+		$indexFileName = 'index.blade';
+		
+		if($this->option('modal') === 'true')
+			$indexFileName = 'indexmodal.blade';
+		
+			
+		$this->info($indexFileName);
+		
         // For index.blade.php file
-        $indexFile = $this->viewDirectoryPath . 'index.blade.stub';
+        $indexFile = $this->viewDirectoryPath . $indexFileName.'.stub';
         $newIndexFile = $path . 'index.blade.php';
         if (!File::copy($indexFile, $newIndexFile)) {
             echo "failed to copy $indexFile...\n";
         } else {
             $this->templateIndexVars($newIndexFile);
+            $this->templateCreateVars($newIndexFile);
         }
 
-        // For create.blade.php file
-        $createFile = $this->viewDirectoryPath . 'create.blade.stub';
-        $newCreateFile = $path . 'create.blade.php';
-        if (!File::copy($createFile, $newCreateFile)) {
-            echo "failed to copy $createFile...\n";
-        } else {
-            $this->templateCreateVars($newCreateFile);
-        }
+		if($this->option('modal') === 'false'){
+	       
+	        // For create.blade.php file
+	        $createFile = $this->viewDirectoryPath . 'create.blade.stub';
+	        $newCreateFile = $path . 'create.blade.php';
+	        if (!File::copy($createFile, $newCreateFile)) {
+	            echo "failed to copy $createFile...\n";
+	        } else {
+	            $this->templateCreateVars($newCreateFile);
+	        }
+        			
+		}
 
         // For edit.blade.php file
         $editFile = $this->viewDirectoryPath . 'edit.blade.stub';
