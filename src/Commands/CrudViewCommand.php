@@ -3,6 +3,7 @@
 namespace Appzcoder\CrudGenerator\Commands;
 
 use File;
+use DB;
 use Illuminate\Console\Command;
 
 class CrudViewCommand extends Command
@@ -15,6 +16,9 @@ class CrudViewCommand extends Command
     protected $signature = 'crud:view
                             {name : The name of the Crud.}
                             {--fields= : The fields name for the form.}
+                            {--hidden-fields= : The fields name for the form.}
+                            {--auto-hide-fields= : Hide automatically fields like id, created_at, updated_at}
+                            {--table= : The table name for the form.}
                             {--view-path= : The name of the view path.}
                             {--route-group= : Prefix of the route group.}
                             {--pk=id : The name of the primary key.}
@@ -40,6 +44,7 @@ class CrudViewCommand extends Command
      * @var array
      */
     protected $typeLookup = [
+	    'int' => 'number',
         'string' => 'text',
         'char' => 'text',
         'varchar' => 'text',
@@ -67,7 +72,14 @@ class CrudViewCommand extends Command
         'boolean' => 'radio',
         'enum' => 'enum',
     ];
-
+	
+	protected $defaultHiddenFields = [
+		'created_at',
+		'updated_at',
+		'id',
+		'remember_token',
+		'deleted_at'
+	];
     /**
      * Form's fields.
      *
@@ -177,6 +189,26 @@ class CrudViewCommand extends Command
         }
     }
 
+
+	public function isHidden($field, $hiddenFieldsArray){
+	
+		$hidden = $hiddenFieldsArray;
+		if($this->option('auto-hide-fields')){
+			
+			$hidden = array_merge($this->defaultHiddenFields, $hidden);
+
+			
+		}
+
+		if(in_array($field, $hidden)){
+			return true;
+		}
+					
+		return false;
+		
+	}
+	
+	
     /**
      * Execute the console command.
      *
@@ -206,10 +238,40 @@ class CrudViewCommand extends Command
 
         $fields = $this->option('fields');
         $fieldsArray = explode(',', $fields);
+		
+		$hiddenFields = $this->option('hidden-fields');
+		$hiddenFieldsArray = explode(',', $hiddenFields);
+		
+				
+		
+		$table = $this->option('table');
 
-        $this->formFields = array();
+		$this->formFields = array();
 
-        if ($fields) {
+		
+		if($table){
+						
+			$columns = DB::select("SHOW COLUMNS FROM ". $table);
+
+			
+            $x = 0;
+            foreach ($columns as $item) {
+	            
+	            if(!$this->isHidden($item->Field, $hiddenFieldsArray)){
+
+	                $this->formFields[$x]['name'] = trim($item->Field);
+	                $this->formFields[$x]['type'] = $this->getFieldType($item->Type);
+	                $this->formFields[$x]['required'] = ($item->Null == 'NO') ? true : false;
+					
+	                $x++;
+                		            
+	            }	            
+
+            }
+            			
+		}elseif ($fields) {
+			
+
             $x = 0;
             foreach ($fieldsArray as $item) {
                 $itemArray = explode('#', $item);
@@ -282,6 +344,17 @@ class CrudViewCommand extends Command
         $this->info('View created successfully.');
     }
 
+
+	public function getFieldType($type){
+		
+        foreach($this->typeLookup as $key => $t){
+	        if(strpos($type, $key) === 0 && strpos($type, $key) !== false){
+		        return $key;
+	        }
+        }
+        		
+	}
+	
     /**
      * Update values between %% with real values in index view.
      *

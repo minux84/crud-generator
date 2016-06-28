@@ -15,6 +15,9 @@ class CrudCommand extends Command
     protected $signature = 'crud:generate
                             {name : The name of the Crud.}
                             {--fields= : Fields name for the form & model.}
+                            {--table= : Table name for the form & model.}
+                            {--hidden-fields= : The names of the hidden fields in form.}
+                            {--auto-hide-fields= : Hide automatically fields like id, created_at, updated_at}
                             {--route=yes : Include Crud route to routes.php? yes|no.}
                             {--pk=id : The name of the primary key.}
                             {--view-path= : The name of the view path.}
@@ -64,13 +67,17 @@ class CrudCommand extends Command
         $controllerNamespace = ($this->option('namespace')) ? $this->option('namespace') . '\\' : '';
 
         $fields = $this->option('fields');
+        $table = $this->option('table');
         $primaryKey = $this->option('pk');
         $viewPath = $this->option('view-path');
+		$hiddenFields = $this->option('hidden-fields');
+		$autoHide = $this->option('auto-hide-fields');
 
         $fieldsArray = explode(',', $fields);
         $requiredFieldsStr = '';
         $fillableArray = [];
-
+		
+		
         foreach ($fieldsArray as $item) {
             $spareParts = explode('#', trim($item));
             $fillableArray[] = $spareParts[0];
@@ -90,8 +97,9 @@ class CrudCommand extends Command
 
         $this->call('crud:controller', ['name' => $controllerNamespace . $name . 'Controller', '--crud-name' => $name, '--model-name' => $modelName, '--view-path' => $viewPath, '--required-fields' => $requiredFields, '--route-group' => $routeGroup]);
         $this->call('crud:model', ['name' => $modelName, '--fillable' => $fillable, '--table' => $tableName, '--pk' => $primaryKey]);
-        $this->call('crud:migration', ['name' => $migrationName, '--schema' => $fields, '--pk' => $primaryKey]);
-        $this->call('crud:view', ['name' => $name, '--fields' => $fields, '--view-path' => $viewPath, '--route-group' => $routeGroup, '--localize' => $localize, '--pk' => $primaryKey]);
+        //$this->call('crud:migration', ['name' => $migrationName, '--schema' => $fields, '--pk' => $primaryKey]);
+        $this->call('crud:view', ['name' => $name, '--fields' => $fields, '--table' => $table, '--hidden-fields' => $hiddenFields, '--auto-hide-fields' => $autoHide, '--view-path' => $viewPath, '--route-group' => $routeGroup, '--localize' => $localize, '--pk' => $primaryKey]);
+        
         if ($localize == 'yes') {
             $this->call('crud:lang', ['name' => $name, '--fields' => $fields, '--locales' => $locales]);
         }
